@@ -298,21 +298,27 @@ par(mfrow = c(1, 1))
 ### 2.3 Análisis conjunto de variables (correlaciones)
 
 ```{r echo=FALSE, message=FALSE}
-
-# Cargar la librería corrplot
-library(corrplot)
-
-if (!requireNamespace("corrplot", quietly = TRUE)) {
-  install.packages("corrplot")
-}
-
-# Calcular la matriz de correlación
+library(reshape2)
+library(ggplot2)
+# Calculo de la matriz de correlación
 correlaciones <- cor(datos_df)
 
-# Crear el mapa de calor de las correlaciones con valores numéricos
-corrplot(correlaciones, method = "color", col = colorRampPalette(c("lightblue", "lightyellow", "red"))(50),
-         number.cex = 0.5, tl.cex = 0.8, tl.col = "black")
+# Convertir la matriz en un dataframe
+cor_df <- melt(correlaciones)
 
+
+# Graficar la matriz de correlación con un heatmap y anotaciones en las celdas
+ggplot(cor_df, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile() + 
+  scale_fill_gradient2(low="blue", mid="white", high="red", 
+                       midpoint=0, limit=c(-1,1), space="Lab", name="Correlación") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, 
+                                    size = 10, hjust = 1),
+        axis.text.y = element_text(size = 10)) + 
+  coord_fixed() + 
+  geom_text(aes(label = round(value, 2)), size = 2, color = "black", alpha = 0.7) + 
+  theme(plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
 ```
 
 Basado en la matriz de correlaciones, a continuación se describen
@@ -346,9 +352,10 @@ algunas de las correlaciones más relevantes:
 ### 2.4 Identificación de datos atípicos y tratamiento de los mismos
 
 Se calculó la cantidad de datos faltantes en el conjunto de datos
-"datos" previo al análisis de la información:
+"datos" previo al análisis de la información, y se eliminaron dichas
+observaciones del conjunto de datos.
 
-```{r echo=FALSE, message=FALSE}
+```{r include=FALSE, message=FALSE}
 
 library(knitr)
 library(kableExtra)
@@ -363,3 +370,159 @@ kable(tabla_datos_faltantes, format = "html") %>%
 ```
 
 ## 3. Presentación del análisis estadístico de los datos
+
+### 3.1 Métodos
+
+```{r include=FALSE}
+# Ajuste de regresión lineal múltiple para predecir la variable views_likes_ratio.
+
+datos_RL <- lm(views_likes_ratio~Danceability
+              + Energy 
+              + Key
+              + Loudness 
+              + Speechiness 
+              + Acousticness 
+              + Instrumentalness 
+              + Liveness
+              + Valence 
+              + Tempo 
+              + Duration_ms
+              #+ Views
+              #+ Likes
+              + Comments
+              + Stream,
+              data = datos_df)
+datos_RL
+```
+
+```{r echo=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+
+# Obtener el resumen del modelo
+resumen_modelo <- summary(datos_RL)
+
+# Crear una tabla con los coeficientes y los estadísticos de interés
+tabla_resumen <- data.frame(
+  Coefficients = rownames(resumen_modelo$coefficients),
+  Estimate = resumen_modelo$coefficients[, "Estimate"],
+  `Std. Error` = resumen_modelo$coefficients[, "Std. Error"],
+  `t value` = resumen_modelo$coefficients[, "t value"],
+  `Pr(>|t|)` = resumen_modelo$coefficients[, "Pr(>|t|)"],
+  `Multiple R-squared` = resumen_modelo$r.squared,
+  `Adjusted R-squared` = resumen_modelo$adj.r.squared
+)
+
+# Formatear la tabla con kable y kableExtra
+tabla_formateada <- kable(tabla_resumen, align = "c", caption = "Resumen del modelo de regresión lineal múltiple datos_RL") %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE, font_size = 12)
+
+# Imprimir la tabla
+tabla_formateada
+
+```
+
+Con el objetivo de mejorar el ajuste del modelo de regresión lineal
+múltiple, consideraremos la eliminación de las variables que tienen un
+valor p alto (p \> 0.05), ya que indican una falta de significancia
+estadística en relación a la variable dependiente (views_likes_ratio).
+En base a los resultados proporcionados, las variables a retirar del
+modelo son:
+
+-   **Key:** La variable Key tiene un coeficiente estimado de -3.249e-05
+    y un valor p de 0.134677. Esto indica que la tonalidad de la canción
+    (clave musical) no es estadísticamente significativa para predecir
+    la variable dependiente. Por lo tanto, podríamos considerar
+    eliminarla del modelo.
+
+-   **Acousticness:** La variable Acousticness tiene un coeficiente
+    estimado de -2.220e-04 y un valor p de 0.555388. Esto indica que la
+    característica acústica de la canción no tiene una relación
+    estadísticamente significativa con la variable dependiente.
+
+-   **Tempo:** La variable Tempo tiene un coeficiente estimado de
+    2.440e-06 y un valor p de 0.366352. Esto indica que el tempo de la
+    canción no es estadísticamente significativo para predecir la
+    variable dependiente.
+
+Al retirar estas variables, el modelo podría tener un mayor ajuste y
+mayor capacidad para explicar la variabilidad en la variable dependiente
+(views_likes_ratio).\
+
+```{r include=FALSE}
+# Ajuste de regresión lineal múltiple para predecir la variable alcoholviews_likes_ratio.
+
+datos_RL1 <- lm(views_likes_ratio~Danceability
+              + Energy 
+              #+ Key
+              + Loudness 
+              + Speechiness 
+              #+ Acousticness 
+              + Instrumentalness 
+              #+ Liveness
+              + Valence 
+              #+ Tempo 
+              + Duration_ms
+              #+ Views
+              #+ Likes
+              + Comments
+              + Stream,
+              data = datos_df)
+datos_RL1
+```
+
+```{r echo=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+
+# Resumen del modelo
+resumen_modelo <- summary(datos_RL1)
+
+# Crear una tabla con los coeficientes y los estadísticos
+tabla_resumen <- data.frame(
+  Coefficients = rownames(resumen_modelo$coefficients),
+  Estimate = resumen_modelo$coefficients[, "Estimate"],
+  `Std. Error` = resumen_modelo$coefficients[, "Std. Error"],
+  `t value` = resumen_modelo$coefficients[, "t value"],
+  `Pr(>|t|)` = resumen_modelo$coefficients[, "Pr(>|t|)"],
+  `Multiple R-squared` = resumen_modelo$r.squared,
+  `Adjusted R-squared` = resumen_modelo$adj.r.squared
+)
+
+# Formatear la tabla con kable y kableExtra
+tabla_formateada <- kable(tabla_resumen, align = "c", caption = "Resumen del modelo de regresión lineal múltiple datos_RL1") %>%
+  kable_styling(bootstrap_options = "striped", full_width = FALSE, font_size = 12)
+
+# Imprimir la tabla
+tabla_formateada
+
+```
+
+```{r include=FALSE}
+summary(datos_RL)
+summary(datos_RL1)
+```
+
+Al comparar los dos modelos, podemos observar las siguientes
+diferencias:
+
+1.  **Predictores adicionales**: El primer modelo "datos_RL", incluye el
+    predictor "Key", "Acousticness", "Liveness" y "Tempo", que no están
+    presentes en el segundo modelo "datos_RL1".
+
+2.  **Estadísticas de ajuste:** El primer modelo de regresión lineal
+    "datos_RL", tiene un R cuadrado ajustado ligeramente mayor (0.06149)
+    en comparación con el segundo modelo (0.06133), lo que sugiere un
+    ajuste ligeramente mejor en términos de explicación de la
+    variabilidad en la variable dependiente. Sin embargo, la diferencia
+    es mínima y ambos modelos tienen un ajuste deficiente en general.
+
+En resumen, el primer modelo incluye cuatro predictores adicionales
+("Key", "Acousticness", "Liveness" y "Tempo"), pero estos no son
+significativos en la explicación de la variabilidad en la variable
+dependiente. Por lo tanto, en términos de rendimiento y calidad de
+ajuste, el segundo modelo que solo incluye los predictores
+"Danceability, Energy, Loudness, Speechiness, Instrumentalness, Valence,
+Duration_ms, Comments, Stream" es igualmente válido y puede ser
+preferible debido a su simplicidad y mayor significancia estadística de
+los coeficientes.
