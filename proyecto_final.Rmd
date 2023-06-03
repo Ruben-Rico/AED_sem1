@@ -15,9 +15,16 @@ editor_options:
 
 ## Análisis estadístico de datos
 
-### Cuál es la canción que pega
+### Proyecto: ¿Cuál es la canción que pega?
 
-#### Introducción
+# Tabla de Contenido
+
+-   [Introducción](#introducción)
+-   [Objetivos](#objetivos)
+-   [1. Descripción de la pregunta de investigación]
+-   [2. Descripción de los datos]
+
+## Introducción {#introducción}
 
 La creación de una canción exitosa es una meta anhelada por la mayoría
 de los artistas, pero no siempre es fácil lograrla. En este trabajo, se
@@ -32,15 +39,61 @@ Además, se pretende evaluar si es posible predecir la aceptación del
 público y determinar si el artista ofrece al mercado un producto
 apetecido.
 
-#### Objetivos
+## Objetivos {#objetivos}
 
-Establecer cuáles son las variables que afectan favorablemente la
-aceptación del público mediante la aplicación de métodos estadísticos al
-conjunto de datos de las 10 mejores canciones de múltiples artistas
-publicadas en Spotify. Evaluar si existe alguna correlación entre el
-número de vistas en Youtube, el número de comentarios y el número de "me
-gusta", y la frecuencia con la que es sugerido un tema por parte del
-algoritmo de la aplicación.
+1.  Establecer cuáles son las variables que afectan favorablemente la
+    aceptación del público mediante la aplicación de métodos
+    estadísticos al conjunto de datos de las 10 mejores canciones de
+    múltiples artistas publicadas en Spotify.
+
+2.  Evaluar si existe alguna correlación entre el número de vistas en
+    Youtube, el número de comentarios y el número de "me gusta", y la
+    frecuencia con la que es sugerido un tema por parte del algoritmo de
+    la aplicación.
+
+3.  El objetivo principal de este proyecto es producir una aplicación de
+    los métodos estadísticos multivariantes vistos a lo largo del curso
+    utilizando uno o varios conjuntos de datos.
+
+## 1. Descripción de la pregunta de investigación
+
+Descripción de la pregunta / problema de investigación:
+
+El propósito de esta investigación es realizar un análisis estadístico
+de las variables obtenidas de dos populares plataformas de streaming de
+música en línea, Spotify y YouTube, para investigar los factores que
+influyen en la aceptación de la audiencia y el éxito comercial de nuevas
+canciones en el mercado digital. La pregunta principal de la
+investigación es: ¿Cuáles son los atributos clave que contribuyen
+significativamente a la aceptación por parte de la audiencia y al éxito
+comercial de las canciones en las plataformas digitales de música?
+
+Los problemas de investigación identificados son los siguientes:
+
+1.  Identificar los atributos musicales y no musicales que están
+    asociados con una mayor aceptación de la audiencia en Spotify y
+    YouTube.
+
+2.  Determinar si existen diferencias significativas en los atributos
+    preferidos por la audiencia entre ambas plataformas.
+
+3.  Evaluar la viabilidad de predecir la aceptación de la audiencia en
+    función de los atributos identificados.
+
+4.  Investigar si ofrecer productos musicales con los atributos deseados
+    influye en el éxito comercial de los artistas en la industria
+    musical.
+
+Al realizar un análisis estadístico de los datos obtenidos de Spotify y
+YouTube, esta investigación pretende proporcionar información valiosa a
+los artistas y productores, permitiéndoles centrarse en los atributos
+más relevantes y optimizar la producción de sus canciones, aumentando
+así sus posibilidades de éxito en la competitiva industria musical.
+Además, las conclusiones de este estudio pueden tener implicaciones
+prácticas para la toma de decisiones estratégicas en el ámbito de la
+promoción y distribución de música en línea.
+
+## 2. Descripción de los datos
 
 Conjunto de Datos En la dirección
 <https://www.kaggle.com/datasets/salvatorerastelli/spotify-and-youtube>
@@ -49,55 +102,102 @@ las 28 variables son numéricas; entre ellas contempla la cantidad de
 reproducciones en las dos plataformas mencionadas y las manifestaciones
 positivas.
 
-```{r}
+El conjunto de datos proporcionado en el enlace
+<https://www.kaggle.com/datasets/salvatorerastelli/spotify-and-youtube>,
+contiene una matriz de datos con un tamaño de 20,718 filas y 28
+columnas. Esto significa que hay 20,718 observaciones o instancias, y
+que cada observación tiene asociadas 28 variables diferentes.
+
+Dentro de este conjunto de datos, hay al menos 10 variables que se
+representan como valores numéricos. Estas variables recogen diversos
+aspectos relacionados con las canciones, como el número de
+reproducciones o streams que recibieron en Spotify y YouTube. Además, el
+conjunto de datos incluye variables que miden manifestaciones positivas
+o comentarios, que podrían indicar el nivel de aceptación o compromiso
+del público con las canciones.
+
+```{r echo=FALSE}
 library(readr)
 library(dplyr)
 datos <- read.csv('Spotify_Youtube.csv')
 colnames(datos)
 ```
 
-Es importante eliminar las columnas que no son relevantes para el
-presente estudio ya que son categóricas:
-
--   X
-
--   Artist
-
--   Track
-
--   Album
-
--   Album_type
-
--   Title
-
--   official_video
-
--   Url_spotify
-
--   Uri
-
--   Url_youtube
-
--   Channel
-
--   Description
-
--   Licensed
-
-```{r}
-datos %>% select(-one_of('X', 'Artist', 'Track', 'Album', 'Album_type', 'Title', 'official_video', 'Url_spotify', 'Uri', 'Url_youtube', 'Channel', 'Description', 'Licensed'))
-#colnames(datos)
+```{r echo=FALSE}
+str(datos)
 ```
+
+### 2.1 Descripción conceptual de los datos.
+
+Con base en el análisis de los datos, las siguientes variables no deben
+tenerse en cuenta en el modelo de regresión lineal múltiple, debido a
+que para el modelo de regresión lineal múltiple es fundamental excluir
+las variables categóricas, los identificadores únicos y las variables
+relacionadas con la información descriptiva. Estas variables carecen de
+un carácter cuantitativo directo y no proporcionan información relevante
+para predecir con exactitud la variable dependiente. Al excluir estas
+variables del análisis, podemos centrarnos en los predictores
+significativos que mejorarán la capacidad predictiva y la fiabilidad del
+modelo.
+
+**X**: Número de índice de la observación en el conjunto de datos. Esta
+variable sirve como identificador sin significación estadística y no
+aporta información sustancial para predecir la variable dependiente.
+
+**Artista:** Nombre del artista que interpreta la canción. Como variable
+categórica, no posee carácter cuantitativo y no debe utilizarse
+directamente en el modelo de regresión.
+
+**Url_spotify:** URL de Spotify asociada al artista. Esta variable
+representa una dirección web y carece de carácter cuantitativo. Además,
+no ofrece información significativa para predecir la variable
+dependiente.
+
+**Track:** Nombre de la canción. Al igual que la variable "Artista", es
+categórica y carece de carácter cuantitativo directo.
+
+**Álbum:** Nombre del álbum al que pertenece la canción. Al tratarse de
+una variable categórica, no puede incorporarse directamente al modelo de
+regresión lineal múltiple.
+
+**Tipo_álbum:** Tipo de álbum. Al ser una variable categórica, no posee
+un carácter cuantitativo directo y no aporta información sustancial para
+predecir la variable dependiente.
+
+**Uri:** Identificador único de la canción en Spotify. Esta variable, al
+servir como identificador único, carece de carácter cuantitativo y no
+aporta información relevante para el modelo de regresión.
+
+**Url_youtube:** URL de YouTube asociada al vídeo de la canción. De
+forma similar a "Url_spotify", esta variable representa una dirección
+web y no posee un carácter cuantitativo directo.
+
+**Title:** Título del vídeo de la canción. Como variable categórica, no
+posee un carácter cuantitativo directo y no aporta información
+sustancial para predecir la variable dependiente.
+
+**Canal:** Canal de YouTube asociado al artista. Al ser una variable
+categórica, no posee un carácter cuantitativo directo y no aporta
+información relevante para el modelo de regresión.
+
+**Descripción:** Descripción asociada al vídeo de la canción. Al ser una
+variable textual, carece de carácter cuantitativo directo y no aporta
+información sustancial para predecir la variable dependiente.
+
+**Licensed**" como "**official_video**" son variables categóricas.
+
+Después de realizar el análisis anterior, se eliminar del conjunto de
+datos aquellas columnas o variables categóricas que no aportan
+información relevante para el modelo de regresión.
+
+```{r echo=FALSE}
+datos %>% select(-one_of('X', 'Artist', 'Track', 'Album', 'Album_type', 'Title', 'official_video', 'Url_spotify', 'Uri', 'Url_youtube', 'Channel', 'Description', 'Licensed'))
+```
+
+### 2.2 Análisis individual de variables.
 
 Agregar columna views/likes
 
 ```{r}
 datos$v_l 
 ```
-
-Análisis de los datos (02 junio 2023)
-
-PCA (Rubén)
-
-Regresión lineal (Vladimir) -
