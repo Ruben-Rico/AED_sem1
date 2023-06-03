@@ -23,6 +23,7 @@ editor_options:
 -   [Objetivos](#objetivos)
 -   [1. Descripción de la pregunta de investigación]
 -   [2. Descripción de los datos]
+-   [3. Presentación del análisis estadístico de los datos]\
 
 ## Introducción {#introducción}
 
@@ -116,14 +117,14 @@ conjunto de datos incluye variables que miden manifestaciones positivas
 o comentarios, que podrían indicar el nivel de aceptación o compromiso
 del público con las canciones.
 
-```{r echo=FALSE}
+```{r include=FALSE}
 library(readr)
 library(dplyr)
 datos <- read.csv('Spotify_Youtube.csv')
 colnames(datos)
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 str(datos)
 ```
 
@@ -186,18 +187,179 @@ información sustancial para predecir la variable dependiente.
 
 **Licensed**" como "**official_video**" son variables categóricas.
 
-Después de realizar el análisis anterior, se eliminar del conjunto de
+Después de realizar el análisis anterior, se elimina del conjunto de
 datos aquellas columnas o variables categóricas que no aportan
 información relevante para el modelo de regresión.
 
+Asimismo, se calcula la relación entre las variables "Views" y "Likes"
+del conjunto de datos y el resultado se asigna a una nueva columna
+llamada "views_likes_ratio", El conjunto de datos resultante, se muestra
+a continuación, luego de identificar y eliminar los datos faltantes:
+
+```{r include=FALSE}
+# Eliminación de variables categóricas:
+
+datos <- datos %>% select(-one_of('X', 'Artist', 'Track', 'Album', 'Album_type', 'Title', 'official_video', 'Url_spotify', 'Uri', 'Url_youtube', 'Channel', 'Description', 'Licensed'))
+colnames(datos)
+```
+
+```{r include=FALSE}
+datos_df <- datos  # Crear una copia del conjunto de datos original
+
+# calcula y asigna la relación "views_likes_ratio" entre las variables "Views" y "Likes"
+
+datos_df$views_likes_ratio <-   datos_df$Likes / datos_df$Views
+```
+
+```{r include=FALSE}
+
+# Calcula la cantidad de datos faltantes por columna
+datos_faltantes <- colSums(is.na(datos_df))
+
+# Imprime la cantidad de datos faltantes por columna
+print(datos_faltantes)
+```
+
+```{r include=FALSE}
+# Eliminar filas con datos faltantes
+datos_df <- na.omit(datos_df)
+```
+
 ```{r echo=FALSE}
-datos %>% select(-one_of('X', 'Artist', 'Track', 'Album', 'Album_type', 'Title', 'official_video', 'Url_spotify', 'Uri', 'Url_youtube', 'Channel', 'Description', 'Licensed'))
+# Obtiene el número total de columnas del conjunto de datos
+#num_cols <- ncol(datos_df)
+
+# Calcula el tamaño de cada parte
+#part_size <- num_cols %/% 3
+
+# Muestra la primera parte de columnas
+#head(datos_df[, 1:part_size])
+
+# Mouestra la segunda parte de columnas
+#head(datos_df[, (part_size+1):(2*part_size)])
+
+# Muestra la tercera parte de columnas
+#head(datos_df[, ((2*part_size)+1):num_cols])
+```
+
+```{r echo=FALSE, message=FALSE}
+# Imprime el encabezado del conjunto de datos resultante
+
+library(knitr)
+library(kableExtra)
+
+tabla <- head(datos_df)[1:8]
+Tabla <- kable(tabla, col.names = colnames(tabla)) %>%
+  kable_styling(font_size = 10) %>%
+  add_header_above(header = NULL)
+
+Tabla
 ```
 
 ### 2.2 Análisis individual de variables.
 
-Agregar columna views/likes
+La siguiente tabla contiene los estadísticos de cada una de las
+variables del conjunto de datos a analizar:
 
-```{r}
-datos$v_l 
+```{r echo=FALSE, message=FALSE}
+library(knitr)
+library(kableExtra)
+
+resumen_estadistico <- summary(datos_df)
+Tabla_estadisticas <- kable(resumen_estadistico) %>%
+  kable_styling(font_size = 10)
+
+Tabla_estadisticas
+
 ```
+
+A continuación se presentan los histogramas de cada una de las
+variables:
+
+```{r echo=FALSE, message=FALSE}
+# Histogramas de todas las variables
+
+# Ajusta los márgenes de la figura
+par(mar = c(2, 2, 2, 2))
+
+# Crea una matriz de subplots para los histogramas
+par(mfrow = c(4, 2))
+
+# Itera sobre las primeras ocho variables y crea el histograma
+variables <- colnames(datos_df)[1:16]
+for (i in 1:length(variables)) {
+  hist(datos_df[, variables[i]], main = variables[i], xlab = "", col = "lightblue")
+}
+
+# Restaura el diseño de gráficos a una sola columna y una fila
+par(mfrow = c(1, 1))
+```
+
+### 2.3 Análisis conjunto de variables (correlaciones)
+
+```{r echo=FALSE, message=FALSE}
+
+# Cargar la librería corrplot
+library(corrplot)
+
+if (!requireNamespace("corrplot", quietly = TRUE)) {
+  install.packages("corrplot")
+}
+
+# Calcular la matriz de correlación
+correlaciones <- cor(datos_df)
+
+# Crear el mapa de calor de las correlaciones con valores numéricos
+corrplot(correlaciones, method = "color", col = colorRampPalette(c("lightblue", "lightyellow", "red"))(50),
+         number.cex = 0.5, tl.cex = 0.8, tl.col = "black")
+
+```
+
+Basado en la matriz de correlaciones, a continuación se describen
+algunas de las correlaciones más relevantes:
+
+1.  **Danceability y Valence:** Tienen una correlación positiva de
+    0.463, lo que indica que las canciones con mayor "danceability"
+    tienden a tener una mayor "valence" o positividad en su sonido.
+
+2.  **Energy y Loudness:** Tienen una correlación positiva de 0.745, lo
+    que sugiere que las canciones con mayor "energy" tienden a tener un
+    mayor "loudness" o volumen.
+
+3.  **Energy y Acousticness:** Tienen una correlación negativa de
+    -0.662, lo que implica que las canciones con mayor "energy" tienden
+    a tener menor "acousticness" o menor presencia de elementos
+    acústicos.
+
+4.  **Valence y Views:** Tienen una correlación positiva de 0.602, lo
+    que indica que las canciones con mayor "valence" tienden a tener más
+    vistas en plataformas de streaming.
+
+5.  **Views y Likes:** Tienen una correlación positiva de 0.892, lo que
+    sugiere que las canciones con más vistas también tienden a tener más
+    "likes" o me gusta por parte de los usuarios.
+
+6.  **Danceability y Loudness**: Tienen una correlación positiva de
+    0.358, lo que sugiere que las canciones con mayor "danceability"
+    tienden a tener un mayor "loudness".
+
+### 2.4 Identificación de datos atípicos y tratamiento de los mismos
+
+Se calculó la cantidad de datos faltantes en el conjunto de datos
+"datos" previo al análisis de la información:
+
+```{r echo=FALSE, message=FALSE}
+
+library(knitr)
+library(kableExtra)
+
+# Crear una tabla con los datos faltantes
+tabla_datos_faltantes <- data.frame(Datos_faltantes = datos_faltantes)
+
+# Imprimir la tabla en formato horizontal
+kable(tabla_datos_faltantes, format = "html") %>%
+  kable_styling(bootstrap_options = "striped", font_size = 12, full_width = FALSE, position = "float_left")
+
+```
+
+## 3. Presentación del análisis estadístico de los datos
